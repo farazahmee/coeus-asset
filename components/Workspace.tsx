@@ -16,7 +16,7 @@ import {
   sheetSubtitle,
 } from "@/lib/fields";
 import type { RecordRow, Sheet, ViewMode } from "@/lib/types";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { DashboardCustom } from "./DashboardCustom";
 import { Header } from "./Header";
 import { NewSheetModal } from "./NewSheetModal";
@@ -36,6 +36,13 @@ export function Workspace() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editRecord, setEditRecord] = useState<RecordRow | null>(null);
   const [newSheetOpen, setNewSheetOpen] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const showToast = useCallback((msg: string) => {
+    setToast(msg);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 2200);
+  }, []);
 
   const activeSheet = sheets.find((s) => s.id === activeId) ?? sheets[0];
   const fields = activeSheet ? getFieldsForSheet(activeSheet) : [];
@@ -99,6 +106,7 @@ export function Workspace() {
     });
     await loadSheets();
     setDrawerOpen(false);
+    showToast(editRecord ? "Saved" : "Added");
     setEditRecord(null);
   };
 
@@ -108,6 +116,7 @@ export function Workspace() {
     await deleteRecord(id);
     setRecords((prev) => prev.filter((r) => r.id !== id));
     await loadSheets();
+    showToast("Deleted");
   };
 
   const handleClear = async () => {
@@ -117,6 +126,7 @@ export function Workspace() {
     await clearRecords(activeSheet.id);
     setRecords([]);
     await loadSheets();
+    showToast("Cleared");
   };
 
   const handleDeleteSheet = async (id: string) => {
@@ -244,7 +254,28 @@ export function Workspace() {
                 )}
               </div>
               {view === "dashboard" ? (
-                <DashboardCustom sheet={activeSheet} records={records} />
+                <div className="space-y-6">
+                  <DashboardCustom sheet={activeSheet} records={records} />
+                  <div>
+                    <h3 className="mb-3 text-sm font-extrabold uppercase tracking-wider text-[#737B86]">
+                      All {activeSheet.name} — full details
+                    </h3>
+                    <RegisterTable
+                      fields={fields}
+                      records={records}
+                      addLabel={addButtonLabel(activeSheet)}
+                      onAdd={() => {
+                        setEditRecord(null);
+                        setDrawerOpen(true);
+                      }}
+                      onEdit={(r) => {
+                        setEditRecord(r);
+                        setDrawerOpen(true);
+                      }}
+                      onDelete={handleDeleteRecord}
+                    />
+                  </div>
+                </div>
               ) : (
                 <RegisterTable
                   fields={fields}
@@ -281,6 +312,12 @@ export function Workspace() {
         onClose={() => setNewSheetOpen(false)}
         onCreate={handleCreateSheet}
       />
+      {toast && (
+        <div className="fixed bottom-5 right-5 z-[100] flex animate-slide-in items-center gap-2 rounded-xl bg-[#16181D] px-4 py-3 text-sm font-semibold text-white shadow-lg">
+          <span className="inline-block h-2 w-2 rounded-full bg-[#3ECF8E]" />
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
