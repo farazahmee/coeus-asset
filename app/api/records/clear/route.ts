@@ -1,10 +1,7 @@
 import { NextRequest } from "next/server";
-import { requireWriteAuth } from "@/lib/api-auth";
 import { ensureSchema, getSql } from "@/lib/db";
 
 export async function POST(req: NextRequest) {
-  const auth = requireWriteAuth(req);
-  if (auth) return auth;
   try {
     await ensureSchema();
     const body = await req.json();
