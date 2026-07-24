@@ -54,6 +54,17 @@ export async function ensureSchema() {
     `;
   }
 
+  // Subscriptions was added after the initial seed, so the COUNT(*) === 0 gate
+  // above never fires in an existing database. Insert it unconditionally and
+  // let ON CONFLICT make it idempotent. Colour is distinct from the other
+  // sidebar sheets (#C8102E hardware, #2D6CDF employees, #7A4FE0 assigned).
+  await db`
+    INSERT INTO sheets (id, name, color, icon, type, fields, sort)
+    VALUES ('subscriptions', 'Subscriptions', '#1FA37A', 'subscription',
+            'subscriptions', '[]', 3)
+    ON CONFLICT (id) DO NOTHING
+  `;
+
   migrated = true;
 }
 

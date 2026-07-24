@@ -23,7 +23,7 @@ export const PLATFORMS = ["macOS", "Windows", "Linux", "ChromeOS", "Other"] as c
 export type Platform = (typeof PLATFORMS)[number];
 
 export const PLATFORM_COLORS: Record<string, string> = {
-  macOS: "#16181D",
+  macOS: "#475569",
   Windows: "#2D6CDF",
   Linux: "#E08A00",
   ChromeOS: "#1FA37A",

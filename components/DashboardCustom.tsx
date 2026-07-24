@@ -5,6 +5,7 @@ import { effectiveSheetType, getFieldsForSheet } from "@/lib/fields";
 import { parseNumber } from "@/lib/format";
 import { DashboardEmployees } from "./DashboardEmployees";
 import { DashboardHardware } from "./DashboardHardware";
+import { DashboardSubscriptions } from "./DashboardSubscriptions";
 import { BarPanel } from "./BarPanel";
 import { KpiCard } from "./KpiCard";
 import { RecentList } from "./RecentList";
@@ -12,13 +13,20 @@ import { RecentList } from "./RecentList";
 export function DashboardCustom({
   sheet,
   records,
+  onShowMissingCost,
 }: {
   sheet: Sheet;
   records: RecordRow[];
+  onShowMissingCost?: () => void;
 }) {
   const t = effectiveSheetType(sheet);
-  if (t === "hardware") return <DashboardHardware records={records} />;
+  if (t === "hardware")
+    return (
+      <DashboardHardware records={records} onShowMissingCost={onShowMissingCost} />
+    );
   if (t === "employees") return <DashboardEmployees records={records} />;
+  if (t === "subscriptions")
+    return <DashboardSubscriptions records={records} />;
 
   const fields = getFieldsForSheet(sheet);
   const numberField = fields.find((f) => f.type === "number");
@@ -59,19 +67,19 @@ export function DashboardCustom({
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Total Records" value={total} accent={accent} icon="#" />
+        <KpiCard label="Total Records" value={total} tone="primary" icon="#" />
         {numberField && (
           <>
             <KpiCard
               label={`Sum (${numberField.label})`}
               value={sum.toLocaleString()}
-              accent={accent}
+              tone="success"
               icon="Σ"
             />
             <KpiCard
               label={`Average (${numberField.label})`}
               value={avg.toFixed(1)}
-              accent={accent}
+              tone="info"
               icon="μ"
             />
           </>
@@ -80,7 +88,7 @@ export function DashboardCustom({
           <KpiCard
             label={`Distinct ${groupField.label}`}
             value={distinctGroup}
-            accent={accent}
+            tone="warning"
             icon="◆"
           />
         )}

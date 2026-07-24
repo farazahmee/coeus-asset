@@ -1,42 +1,61 @@
 import type { ReactNode } from "react";
 
+export type KpiTone =
+  | "primary"
+  | "success"
+  | "warning"
+  | "danger"
+  | "info"
+  | "brand";
+
+const TONES: Record<KpiTone, { fg: string; tint: string }> = {
+  primary: { fg: "var(--primary)", tint: "var(--primary-tint)" },
+  success: { fg: "var(--success)", tint: "var(--success-tint)" },
+  warning: { fg: "var(--warning)", tint: "var(--warning-tint)" },
+  danger: { fg: "var(--danger)", tint: "var(--danger-tint)" },
+  info: { fg: "var(--info)", tint: "var(--info-tint)" },
+  brand: { fg: "var(--brand)", tint: "var(--brand-tint)" },
+};
+
 export function KpiCard({
   label,
   value,
   sub,
-  accent,
+  tone = "primary",
   icon,
 }: {
   label: string;
   value: ReactNode;
   sub?: string;
-  accent: string;
+  tone?: KpiTone;
   icon?: ReactNode;
 }) {
+  const { fg, tint } = TONES[tone];
   return (
-    <div
-      className="animate-rise rounded-[14px] border border-[#E6E9ED] bg-white p-4 shadow-[0_1px_3px_rgba(22,24,29,0.06)]"
-      style={{ borderLeftWidth: 4, borderLeftColor: accent }}
-    >
-      <div className="mb-2 flex items-center gap-2">
+    <div className="card animate-rise relative flex flex-col gap-1.5 overflow-hidden p-4">
+      <span
+        className="absolute inset-x-0 top-0 h-[3px]"
+        style={{ backgroundColor: fg }}
+        aria-hidden
+      />
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-[11px] font-extrabold uppercase tracking-wider text-muted">
+          {label}
+        </span>
         {icon && (
           <span
-            className="flex h-7 w-7 items-center justify-center rounded-lg text-xs font-bold"
-            style={{ backgroundColor: `${accent}18`, color: accent }}
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md text-[11px] font-bold"
+            style={{ backgroundColor: tint, color: fg }}
+            aria-hidden
           >
             {icon}
           </span>
         )}
-        <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#737B86]">
-          {label}
-        </span>
       </div>
-      <div className="font-mono text-2xl font-semibold tabular-nums text-[#16181D]">
+      <div className="font-mono text-[26px] font-semibold leading-none tabular text-ink">
         {value}
       </div>
-      {sub && (
-        <p className="mt-1 text-xs text-[#737B86]">{sub}</p>
-      )}
+      {sub && <p className="text-xs text-muted">{sub}</p>}
     </div>
   );
 }

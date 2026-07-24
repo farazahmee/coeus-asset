@@ -1,6 +1,6 @@
-export type SheetType = "hardware" | "employees" | "custom";
+export type SheetType = "hardware" | "employees" | "subscriptions" | "custom";
 
-export type FieldType = "text" | "number" | "date" | "select";
+export type FieldType = "text" | "number" | "date" | "select" | "password";
 
 export interface CustomField {
   key: string;

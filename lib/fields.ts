@@ -1,6 +1,6 @@
 import type { CustomField, RecordRow, Sheet, SheetType } from "./types";
 
-export const BUILTIN_IDS = new Set(["hardware", "employees"]);
+export const BUILTIN_IDS = new Set(["hardware", "employees", "subscriptions"]);
 
 /** Virtual (derived) sheet: laptops that are currently assigned to someone.
  *  It is not stored in the database — it is computed from the Hardware sheet. */
@@ -10,6 +10,7 @@ export const ASSIGNED_LAPTOPS_ID = "assigned-laptops";
 export const READONLY_SHEET_IDS = new Set([
   "hardware",
   "employees",
+  "subscriptions",
   ASSIGNED_LAPTOPS_ID,
 ]);
 
@@ -44,12 +45,12 @@ export const HARDWARE_CATEGORIES = [
 ] as const;
 
 export const CATEGORY_COLORS: Record<string, string> = {
-  Laptop: "#C8102E",
-  Desktop: "#2D6CDF",
+  Laptop: "#2D6CDF",
+  Desktop: "#7A4FE0",
   Monitor: "#1FA37A",
-  Mobile: "#7A4FE0",
-  Tablet: "#0EA5B5",
-  Peripheral: "#E08A00",
+  Mobile: "#0EA5B5",
+  Tablet: "#E08A00",
+  Peripheral: "#D6336C",
   Other: "#737B86",
 };
 
@@ -69,10 +70,24 @@ export const STATUS_COLORS: Record<string, string> = {
   Resigned: "#737B86",
 };
 
+export const BILLING_CYCLES = ["Monthly", "Annual"] as const;
+
+export const BILLING_CYCLE_COLORS: Record<string, string> = {
+  Monthly: "#2D6CDF",
+  Annual: "#7A4FE0",
+};
+
+export const AUTO_RENEW_OPTIONS = ["Yes", "No"] as const;
+
+export const AUTO_RENEW_COLORS: Record<string, string> = {
+  Yes: "#1FA37A",
+  No: "#737B86",
+};
+
 export interface FieldDef {
   key: string;
   label: string;
-  type: "text" | "number" | "date" | "select";
+  type: "text" | "number" | "date" | "select" | "password";
   required?: boolean;
   options?: string[];
   palette?: Record<string, string>;
@@ -116,9 +131,33 @@ const employeeFields: FieldDef[] = [
   { key: "joiningDate", label: "Joining Date", type: "date" },
 ];
 
+const subscriptionFields: FieldDef[] = [
+  { key: "softwareName", label: "Software", type: "text", required: true },
+  { key: "url", label: "URL", type: "text" },
+  { key: "usernameEmail", label: "Username / Email", type: "text" },
+  { key: "password", label: "Password", type: "password" },
+  {
+    key: "billingCycle",
+    label: "Billing",
+    type: "select",
+    options: [...BILLING_CYCLES],
+    palette: BILLING_CYCLE_COLORS,
+  },
+  { key: "purchaseDate", label: "Purchase Date", type: "date" },
+  {
+    key: "autoRenew",
+    label: "Auto-Renew",
+    type: "select",
+    options: [...AUTO_RENEW_OPTIONS],
+    palette: AUTO_RENEW_COLORS,
+  },
+];
+
 export function effectiveSheetType(sheet: Sheet): SheetType {
   if (sheet.type === "hardware" || sheet.id === "hardware") return "hardware";
   if (sheet.type === "employees" || sheet.id === "employees") return "employees";
+  if (sheet.type === "subscriptions" || sheet.id === "subscriptions")
+    return "subscriptions";
   return "custom";
 }
 
@@ -126,6 +165,7 @@ export function getFieldsForSheet(sheet: Sheet): FieldDef[] {
   const t = effectiveSheetType(sheet);
   if (t === "hardware") return hardwareFields;
   if (t === "employees") return employeeFields;
+  if (t === "subscriptions") return subscriptionFields;
   return (sheet.fields || []).map((f) => ({
     key: f.key,
     label: f.label,
@@ -146,6 +186,7 @@ export function addButtonLabel(sheet: Sheet): string {
   const t = effectiveSheetType(sheet);
   if (t === "hardware") return "Add Asset";
   if (t === "employees") return "Add Person";
+  if (t === "subscriptions") return "Add Subscription";
   return "Add Item";
 }
 
@@ -153,6 +194,8 @@ export function sheetSubtitle(sheet: Sheet): string {
   const t = effectiveSheetType(sheet);
   if (t === "hardware") return "IT hardware inventory and spend tracking";
   if (t === "employees") return "People, teams, and machine assignments";
+  if (t === "subscriptions")
+    return "Software subscriptions, logins, and billing";
   return "Custom register for this sheet";
 }
 
