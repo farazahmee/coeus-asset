@@ -6,6 +6,17 @@ import type { RecordRow } from "@/lib/types";
 import { Pill } from "./Pill";
 import { useMemo, useState, type ReactNode } from "react";
 
+const monoKeys = new Set([
+  "assetTag",
+  "serialNumber",
+  "machineId",
+  "cost",
+  "email",
+  "usernameEmail",
+  "url",
+  "password",
+]);
+
 export function RegisterTable({
   fields,
   records,
@@ -23,17 +34,13 @@ export function RegisterTable({
   onDelete: (id: string) => void;
   onAdd: () => void;
   addLabel: string;
-  /** Keys that can be edited directly in the table (e.g. cost, category). */
   editableKeys?: Set<string>;
-  /** Commit an inline edit; receives a drawer-shaped payload (fields + id). */
   onInlineSave?: (data: Record<string, string | number>) => void | Promise<void>;
-  /** Optional banner shown above the table (e.g. active "missing cost" filter). */
   filterNotice?: ReactNode;
 }) {
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<{ id: string; key: string } | null>(null);
   const [draft, setDraft] = useState("");
-  // Record ids whose password cell is currently revealed.
   const [revealed, setRevealed] = useState<Set<string>>(new Set());
 
   const toggleReveal = (id: string) =>
@@ -54,14 +61,14 @@ export function RegisterTable({
 
   if (records.length === 0 && !filterNotice) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-[14px] border border-[#E6E9ED] bg-white py-16 shadow-[0_1px_3px_rgba(22,24,29,0.06)]">
-        <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#F3F4F6] text-[#737B86]">
+      <div className="card flex flex-col items-center justify-center py-16">
+        <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-surface-2 text-muted">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M12 5v14M5 12h14" />
           </svg>
         </div>
-        <p className="mb-1 font-semibold text-[#16181D]">No records yet</p>
-        <p className="mb-4 text-sm text-[#737B86]">Add your first entry to this sheet.</p>
+        <p className="mb-1 font-semibold text-ink">No records yet</p>
+        <p className="mb-4 text-sm text-muted">Add your first entry to this sheet.</p>
         <button type="button" onClick={onAdd} className="btn-primary">
           {addLabel}
         </button>
@@ -69,19 +76,6 @@ export function RegisterTable({
     );
   }
 
-  const monoKeys = new Set([
-    "assetTag",
-    "serialNumber",
-    "machineId",
-    "cost",
-    "email",
-    "usernameEmail",
-    "url",
-    "password",
-  ]);
-
-  // Build a drawer-shaped payload (non-empty field values + id) with one field
-  // changed, mirroring RecordDrawer.submit so we never persist stray keys.
   function commit(r: RecordRow, f: FieldDef) {
     const current = r[f.key] == null ? "" : String(r[f.key]);
     if (draft === current) {
@@ -110,8 +104,6 @@ export function RegisterTable({
   }
 
   function renderEditor(r: RecordRow, f: FieldDef) {
-    const common =
-      "w-full rounded border border-[#C8102E] px-2 py-1 text-sm outline-none";
     if (f.type === "select") {
       return (
         <select
@@ -123,7 +115,7 @@ export function RegisterTable({
             if (e.key === "Enter") commit(r, f);
             if (e.key === "Escape") setEditing(null);
           }}
-          className={common}
+          className="field"
         >
           <option value="">—</option>
           {(f.options || []).map((o) => (
@@ -145,7 +137,7 @@ export function RegisterTable({
           if (e.key === "Enter") commit(r, f);
           if (e.key === "Escape") setEditing(null);
         }}
-        className={`${common} ${f.type === "number" ? "font-mono tabular-nums" : ""}`}
+        className={`field ${f.type === "number" ? "font-mono tabular" : ""}`}
       />
     );
   }
@@ -163,16 +155,16 @@ export function RegisterTable({
           <button
             type="button"
             onClick={() => toggleReveal(r.id)}
-            className="rounded p-0.5 text-[#737B86] hover:text-[#16181D]"
+            className="rounded p-0.5 text-muted transition hover:text-ink"
             aria-label={shown ? "Hide password" : "Show password"}
           >
             {shown ? (
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
                 <path d="M1 1l22 22" />
               </svg>
             ) : (
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                 <circle cx="12" cy="12" r="3" />
               </svg>
@@ -189,14 +181,14 @@ export function RegisterTable({
           href={href}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[#2D6CDF] hover:underline"
+          className="text-info hover:underline"
         >
           {raw}
         </a>
       );
     }
     if (f.type === "select" && f.palette) {
-      return <Pill label={String(v)} color={f.palette[String(v)] || "#737B86"} />;
+      return <Pill label={String(v)} color={f.palette[String(v)] || "var(--muted)"} />;
     }
     return String(v);
   }
@@ -212,8 +204,8 @@ export function RegisterTable({
           type="button"
           onClick={() => startEdit(r, f)}
           title="Click to edit"
-          className={`-mx-1 flex min-h-[24px] items-center gap-1 rounded px-1 text-left hover:bg-[#FDECEC] ${
-            empty ? "text-[#C8102E]" : ""
+          className={`-mx-1 flex min-h-[24px] items-center gap-1 rounded px-1 text-left transition hover:bg-primary-tint ${
+            empty ? "text-primary" : ""
           }`}
         >
           {empty ? "＋ Add" : display(f, r)}
@@ -223,79 +215,130 @@ export function RegisterTable({
     return display(f, r);
   }
 
+  const actions = (r: RecordRow) => (
+    <>
+      <button
+        type="button"
+        onClick={() => onEdit(r)}
+        className="icon-btn"
+        aria-label="Edit record"
+        title="Edit"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+          <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        onClick={() => onDelete(r.id)}
+        className="icon-btn hover:!text-brand"
+        aria-label="Delete record"
+        title="Delete"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+          <polyline points="3 6 5 6 21 6" />
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+        </svg>
+      </button>
+    </>
+  );
+
   return (
-    <div className="rounded-[14px] border border-[#E6E9ED] bg-white shadow-[0_1px_3px_rgba(22,24,29,0.06)]">
+    <div className="card">
       {filterNotice && (
-        <div className="border-b border-[#E6E9ED] px-4 py-3">{filterNotice}</div>
+        <div className="border-b border-line px-4 py-3">{filterNotice}</div>
       )}
-      <div className="flex flex-wrap items-center gap-3 border-b border-[#E6E9ED] p-4">
+      <div className="flex flex-wrap items-center gap-3 border-b border-line p-4">
         <input
           type="search"
           placeholder="Search records…"
+          aria-label="Search records"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          className="min-w-[200px] flex-1 rounded-lg border border-[#E6E9ED] px-3 py-2 text-sm outline-none focus:border-[#C8102E]"
+          className="field min-w-[200px] flex-1"
         />
       </div>
-      <div className="overflow-x-auto">
+
+      {/* Desktop / tablet: table */}
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[640px] text-left text-sm">
           <thead>
-            <tr className="border-b border-[#E6E9ED] bg-[#F9FAFB] text-[10px] font-extrabold uppercase tracking-wider text-[#737B86]">
+            <tr className="border-b border-line bg-surface-2 text-[10px] font-extrabold uppercase tracking-wider text-muted">
               {fields.map((f) => (
-                <th key={f.key} className="px-4 py-3">
+                <th key={f.key} scope="col" className="px-4 py-3">
                   {f.label}
                 </th>
               ))}
-              <th className="px-4 py-3 text-right">Actions</th>
+              <th scope="col" className="px-4 py-3 text-right">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((r) => (
               <tr
                 key={r.id}
-                className="border-b border-[#E6E9ED] last:border-0 hover:bg-[#FAFBFC]"
+                className="border-b border-line last:border-0 hover:bg-surface-2"
               >
                 {fields.map((f) => (
                   <td
                     key={f.key}
-                    className={`px-4 py-3 text-[#3A4049] ${
-                      monoKeys.has(f.key) ? "font-mono tabular-nums" : ""
+                    className={`px-4 py-3 text-ink-2 ${
+                      monoKeys.has(f.key) ? "font-mono tabular" : ""
                     }`}
                   >
                     {cell(f, r)}
                   </td>
                 ))}
-                <td className="px-4 py-3 text-right">
-                  <button
-                    type="button"
-                    onClick={() => onEdit(r)}
-                    className="mr-2 rounded p-1.5 text-[#737B86] hover:bg-[#F3F4F6] hover:text-[#16181D]"
-                    title="Edit"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                      <path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => onDelete(r.id)}
-                    className="rounded p-1.5 text-[#737B86] hover:bg-red-50 hover:text-[#C8102E]"
-                    title="Delete"
-                  >
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polyline points="3 6 5 6 21 6" />
-                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-                    </svg>
-                  </button>
+                <td className="px-4 py-3">
+                  <div className="flex justify-end gap-1">{actions(r)}</div>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {/* Mobile: card list */}
+      <ul className="divide-y divide-[var(--line)] md:hidden">
+        {filtered.map((r) => {
+          const titleField = fields[0];
+          return (
+            <li key={r.id} className="p-4">
+              <div className="mb-2 flex items-start justify-between gap-2">
+                <div
+                  className={`font-semibold text-ink ${
+                    titleField && monoKeys.has(titleField.key) ? "font-mono tabular" : ""
+                  }`}
+                >
+                  {titleField ? cell(titleField, r) : "—"}
+                </div>
+                <div className="flex shrink-0 gap-1">{actions(r)}</div>
+              </div>
+              <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+                {fields.slice(1).map((f) => (
+                  <div key={f.key} className="contents">
+                    <dt className="text-[10px] font-extrabold uppercase tracking-wider text-muted">
+                      {f.label}
+                    </dt>
+                    <dd
+                      className={`text-ink-2 ${
+                        monoKeys.has(f.key) ? "font-mono tabular" : ""
+                      }`}
+                    >
+                      {cell(f, r)}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </li>
+          );
+        })}
+      </ul>
+
       {filtered.length === 0 && q && (
-        <p className="p-4 text-center text-sm text-[#737B86]">No matches for &quot;{q}&quot;</p>
+        <p className="p-4 text-center text-sm text-muted">No matches for &quot;{q}&quot;</p>
       )}
     </div>
   );

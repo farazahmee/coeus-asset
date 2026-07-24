@@ -2,20 +2,33 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function Header({
   saving,
   onExport,
+  onMenuClick,
 }: {
   saving: boolean;
   onExport: () => void;
+  onMenuClick: () => void;
 }) {
   const [imgOk, setImgOk] = useState(true);
 
   return (
-    <header className="sticky top-0 z-30 border-b-[3px] border-[#C8102E] bg-gradient-to-r from-[#16181D] to-[#1f2228] px-4 py-3 md:px-6">
+    <header className="sticky top-0 z-30 border-b-2 border-brand bg-[var(--sidebar-bg)] px-4 py-3 md:px-6">
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
+          <button
+            type="button"
+            onClick={onMenuClick}
+            className="icon-btn -ml-1 text-white/80 hover:bg-white/10 hover:text-white lg:hidden"
+            aria-label="Open sheets menu"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M3 6h18M3 12h18M3 18h18" />
+            </svg>
+          </button>
           <div className="flex shrink-0 items-center justify-center rounded-lg bg-white p-2 shadow-md">
             {imgOk ? (
               <Image
@@ -27,12 +40,12 @@ export function Header({
                 onError={() => setImgOk(false)}
               />
             ) : (
-              <span className="px-1 text-xs font-extrabold text-[#C8102E]">COEUS</span>
+              <span className="px-1 text-xs font-extrabold text-brand">COEUS</span>
             )}
           </div>
           <div className="hidden h-8 w-px bg-white/20 sm:block" />
           <div className="min-w-0">
-            <h1 className="truncate text-base font-extrabold text-white md:text-lg">
+            <h1 className="font-display truncate text-base font-extrabold text-white md:text-lg">
               Asset Workspace
             </h1>
             <p className="text-[10px] font-bold uppercase tracking-widest text-white/50">
@@ -42,7 +55,7 @@ export function Header({
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <span
-            className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold ${
+            className={`hidden items-center gap-2 rounded-full px-3 py-1.5 text-xs font-bold sm:inline-flex ${
               saving
                 ? "bg-amber-500/20 text-amber-200"
                 : "bg-emerald-500/15 text-emerald-200"
@@ -55,6 +68,7 @@ export function Header({
             />
             {saving ? "Saving…" : "Cloud synced"}
           </span>
+          <ThemeToggle />
           <button type="button" onClick={onExport} className="btn-ghost">
             Export CSV
           </button>

@@ -34,19 +34,14 @@ export function DashboardSubscriptions({ records }: { records: RecordRow[] }) {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Total Subscriptions" value={total} accent="#1FA37A" icon="#" />
-        <KpiCard
-          label="Monthly"
-          value={monthly}
-          accent="#2D6CDF"
-          icon="M"
-        />
-        <KpiCard label="Annual" value={annual} accent="#7A4FE0" icon="A" />
+        <KpiCard label="Total Subscriptions" value={total} tone="primary" icon="#" />
+        <KpiCard label="Monthly" value={monthly} tone="info" icon="M" />
+        <KpiCard label="Annual" value={annual} tone="success" icon="A" />
         <KpiCard
           label="Auto-Renew On"
           value={autoOn}
           sub={`${autoOff} off`}
-          accent="#E08A00"
+          tone="warning"
           icon="↻"
         />
       </div>

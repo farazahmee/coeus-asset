@@ -12,16 +12,16 @@ export interface BarItem {
 
 function EmptyPanel({ title, emptyLabel }: { title: string; emptyLabel: string }) {
   return (
-    <div className="animate-rise rounded-[14px] border border-[#E6E9ED] bg-white p-5 shadow-[0_1px_3px_rgba(22,24,29,0.06)]">
-      <h3 className="mb-4 text-sm font-bold text-[#16181D]">{title}</h3>
+    <div className="card animate-rise p-5">
+      <h3 className="mb-4 text-sm font-bold text-ink">{title}</h3>
       <div className="flex h-40 flex-col items-center justify-center gap-2 text-center">
-        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F3F4F6] text-[#B5BBC4]">
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-surface-2 text-muted">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M3 3v18h18" />
             <path d="M18 17V9M13 17V5M8 17v-3" />
           </svg>
         </span>
-        <p className="text-sm font-medium text-[#737B86]">{emptyLabel}</p>
+        <p className="text-sm font-medium text-muted">{emptyLabel}</p>
       </div>
     </div>
   );
@@ -57,15 +57,15 @@ export function BarPanel({
   if (!horizontal) {
     const max = Math.max(...items.map(metricOf), 1);
     return (
-      <div className="animate-rise rounded-[14px] border border-[#E6E9ED] bg-white p-5 shadow-[0_1px_3px_rgba(22,24,29,0.06)]">
-        <h3 className="mb-4 text-sm font-bold text-[#16181D]">{title}</h3>
+      <div className="card animate-rise p-5">
+        <h3 className="mb-4 text-sm font-bold text-ink">{title}</h3>
         <div className="flex h-48 items-end gap-2">
           {items.map((item) => {
             const m = metricOf(item);
             return (
               <div key={item.label} className="flex flex-1 flex-col items-center gap-1">
                 {useValue && (
-                  <span className="font-mono text-[10px] font-semibold tabular-nums text-[#3A4049]">
+                  <span className="font-mono text-[10px] font-semibold tabular text-ink-2">
                     {valueFormatter!(item.value ?? 0)}
                   </span>
                 )}
@@ -78,7 +78,7 @@ export function BarPanel({
                     backgroundColor: item.color,
                   }}
                 />
-                <span className="font-mono text-[10px] text-[#737B86]">{item.label}</span>
+                <span className="font-mono text-[10px] text-muted">{item.label}</span>
               </div>
             );
           })}
@@ -88,25 +88,25 @@ export function BarPanel({
   }
 
   // Width scales by value when a valueFormatter is supplied (e.g. spend charts),
-  // otherwise by count (e.g. counts by category). No formatter -> count, so
-  // existing count-based charts are unchanged.
+  // otherwise by count. No formatter -> count, so count-based charts are
+  // unchanged.
   const max = Math.max(...items.map(metricOf), 1);
   return (
-    <div className="animate-rise rounded-[14px] border border-[#E6E9ED] bg-white p-5 shadow-[0_1px_3px_rgba(22,24,29,0.06)]">
-      <h3 className="mb-4 text-sm font-bold text-[#16181D]">{title}</h3>
+    <div className="card animate-rise p-5">
+      <h3 className="mb-4 text-sm font-bold text-ink">{title}</h3>
       <div className="space-y-3">
         {items.map((item) => (
           <div key={item.label}>
             <div className="mb-1 flex justify-between text-xs">
-              <span className="font-semibold text-[#3A4049]">{item.label}</span>
-              <span className="font-mono tabular-nums text-[#737B86]">
+              <span className="font-semibold text-ink-2">{item.label}</span>
+              <span className="font-mono tabular text-muted">
                 {item.sub ??
                   (valueFormatter && item.value != null
                     ? `${item.count} · ${valueFormatter(item.value)}`
                     : String(item.count))}
               </span>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-[#F3F4F6]">
+            <div className="h-2 overflow-hidden rounded-full bg-surface-2">
               <div
                 className="h-full rounded-full transition-all duration-700 ease-out"
                 style={{

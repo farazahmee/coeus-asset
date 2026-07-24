@@ -17,12 +17,12 @@ export const HARDWARE_CATEGORIES = [
 ] as const;
 
 export const CATEGORY_COLORS: Record<string, string> = {
-  Laptop: "#C8102E",
-  Desktop: "#2D6CDF",
+  Laptop: "#2D6CDF",
+  Desktop: "#7A4FE0",
   Monitor: "#1FA37A",
-  Mobile: "#7A4FE0",
-  Tablet: "#0EA5B5",
-  Peripheral: "#E08A00",
+  Mobile: "#0EA5B5",
+  Tablet: "#E08A00",
+  Peripheral: "#D6336C",
   Other: "#737B86",
 };
 

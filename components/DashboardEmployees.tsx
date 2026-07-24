@@ -24,7 +24,7 @@ export function DashboardEmployees({ records }: { records: RecordRow[] }) {
     .map(([label, count]) => ({
       label,
       count,
-      color: "#2D6CDF",
+      color: "var(--info)",
     }));
 
   const byStatus = EMPLOYEE_STATUSES.map((st) => ({
@@ -41,10 +41,10 @@ export function DashboardEmployees({ records }: { records: RecordRow[] }) {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Total People" value={total} accent="#2D6CDF" icon="#" />
-        <KpiCard label="Teams" value={teams} accent="#2D6CDF" icon="T" />
-        <KpiCard label="Active / Remote" value={activeRemote} accent="#2D6CDF" icon="✓" />
-        <KpiCard label="With Machine" value={withMachine} accent="#2D6CDF" icon="M" />
+        <KpiCard label="Total People" value={total} tone="primary" icon="#" />
+        <KpiCard label="Teams" value={teams} tone="info" icon="T" />
+        <KpiCard label="Active / Remote" value={activeRemote} tone="success" icon="✓" />
+        <KpiCard label="With Machine" value={withMachine} tone="warning" icon="M" />
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         <BarPanel title="Headcount by Team" items={byTeam} />

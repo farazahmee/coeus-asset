@@ -61,7 +61,7 @@ export function DashboardHardware({
       label,
       count,
       value: cost,
-      color: "#C8102E",
+      color: "var(--primary)",
     }))
     .filter((x) => x.value > 0);
 
@@ -76,16 +76,16 @@ export function DashboardHardware({
   return (
     <div className="space-y-6">
       {missingCost > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-[14px] border border-[#F5C9C0] bg-[#FDECEC] px-4 py-3">
+        <div className="animate-rise flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-lg)] bg-danger-tint px-4 py-3">
           <div className="flex items-center gap-2 text-sm">
-            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#C8102E] text-xs font-bold text-white">
+            <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand text-xs font-bold text-white">
               !
             </span>
-            <span className="font-semibold text-[#8A1420]">
+            <span className="font-semibold text-ink">
               {missingCost} {missingCost === 1 ? "asset has" : "assets have"} no
               cost recorded
             </span>
-            <span className="text-[#B5675F]">
+            <span className="text-muted">
               — Total Value and Spend by Year are understated.
             </span>
           </div>
@@ -93,7 +93,7 @@ export function DashboardHardware({
             <button
               type="button"
               onClick={onShowMissingCost}
-              className="shrink-0 rounded-lg bg-[#C8102E] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#a50d25]"
+              className="shrink-0 rounded-[var(--radius-md)] bg-brand px-3 py-1.5 text-xs font-bold text-white transition hover:bg-brand-strong"
             >
               Review {missingCost} {missingCost === 1 ? "asset" : "assets"} →
             </button>
@@ -101,20 +101,20 @@ export function DashboardHardware({
         </div>
       )}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Total Assets" value={total} accent="#C8102E" icon="#" />
+        <KpiCard label="Total Assets" value={total} tone="primary" icon="#" />
         <KpiCard
           label="Total Value"
           value={abbreviatePKR(totalValue)}
           sub={missingCost > 0 ? `excludes ${missingCost} with no cost` : undefined}
-          accent="#C8102E"
+          tone="success"
           icon="Rs"
         />
-        <KpiCard label="Categories" value={categories} accent="#C8102E" icon="◆" />
+        <KpiCard label="Categories" value={categories} tone="info" icon="◆" />
         <KpiCard
           label="Assigned"
           value={assigned}
           sub={`${spare} spare / unassigned`}
-          accent="#C8102E"
+          tone="warning"
           icon="→"
         />
       </div>

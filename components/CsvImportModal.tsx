@@ -176,23 +176,23 @@ export function CsvImportModal({
   return (
     <>
       <div
-        className="fixed inset-0 z-40 bg-[#16181D]/40 backdrop-blur-[1px]"
+        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px]"
         onClick={close}
         aria-hidden
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        <div className="flex max-h-[88vh] w-full max-w-3xl flex-col rounded-[14px] bg-white shadow-2xl animate-rise">
-          <div className="flex items-center justify-between border-b border-[#E6E9ED] px-5 py-4">
+        <div className="flex max-h-[88vh] w-full max-w-3xl flex-col rounded-[var(--radius-lg)] bg-surface shadow-2xl animate-rise">
+          <div className="flex items-center justify-between border-b border-line px-5 py-4">
             <div>
-              <h2 className="text-lg font-bold text-[#16181D]">Import from CSV</h2>
-              <p className="text-xs text-[#737B86]">
+              <h2 className="text-lg font-bold text-ink">Import from CSV</h2>
+              <p className="text-xs text-muted">
                 Match rows to existing assets and update them — no duplicates.
               </p>
             </div>
             <button
               type="button"
               onClick={close}
-              className="rounded p-2 text-[#737B86] hover:bg-[#F3F4F6]"
+              className="rounded p-2 text-muted hover:bg-surface-2"
               aria-label="Close"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -204,15 +204,15 @@ export function CsvImportModal({
           <div className="min-h-0 flex-1 overflow-y-auto p-5">
             {step === "upload" && (
               <div className="flex flex-col items-center justify-center gap-4 py-10 text-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#F3F4F6] text-[#737B86]">
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-surface-2 text-muted">
                   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
                     <path d="M17 8l-5-5-5 5M12 3v12" />
                   </svg>
                 </div>
                 <div>
-                  <p className="font-semibold text-[#16181D]">Choose a CSV file</p>
-                  <p className="text-sm text-[#737B86]">
+                  <p className="font-semibold text-ink">Choose a CSV file</p>
+                  <p className="text-sm text-muted">
                     First row must be column headers.
                   </p>
                 </div>
@@ -235,7 +235,7 @@ export function CsvImportModal({
                   Select CSV
                 </button>
                 {parseError && (
-                  <p className="text-sm font-semibold text-[#C8102E]">{parseError}</p>
+                  <p className="text-sm font-semibold text-danger">{parseError}</p>
                 )}
               </div>
             )}
@@ -243,21 +243,21 @@ export function CsvImportModal({
             {step === "map" && parsed && (
               <div className="space-y-5">
                 <div className="flex items-center justify-between">
-                  <p className="text-sm text-[#3A4049]">
+                  <p className="text-sm text-ink-2">
                     <span className="font-semibold">{fileName}</span> —{" "}
                     {parsed.rows.length} rows, {parsed.headers.length} columns
                   </p>
                   <button
                     type="button"
-                    className="text-xs font-semibold text-[#737B86] hover:text-[#C8102E]"
+                    className="text-xs font-semibold text-muted transition hover:text-brand"
                     onClick={reset}
                   >
                     Choose different file
                   </button>
                 </div>
 
-                <div className="rounded-lg border border-[#E6E9ED] p-4">
-                  <p className="mb-1 text-xs font-bold uppercase tracking-wider text-[#737B86]">
+                <div className="rounded-lg border border-line p-4">
+                  <p className="mb-1 text-xs font-bold uppercase tracking-wider text-muted">
                     Match existing assets by
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -268,8 +268,8 @@ export function CsvImportModal({
                         onClick={() => setMatchKey(f.key)}
                         className={`rounded-lg border px-3 py-1.5 text-sm font-semibold ${
                           matchKey === f.key
-                            ? "border-[#C8102E] bg-[#FDECEC] text-[#C8102E]"
-                            : "border-[#E6E9ED] text-[#3A4049]"
+                            ? "border-primary bg-primary-tint text-primary"
+                            : "border-line text-ink-2"
                         }`}
                       >
                         {f.label}
@@ -277,7 +277,7 @@ export function CsvImportModal({
                     ))}
                   </div>
                   {matchColMissing && (
-                    <p className="mt-2 text-xs font-semibold text-[#C8102E]">
+                    <p className="mt-2 text-xs font-semibold text-danger">
                       Map a CSV column to “{fieldLabel(fields, matchKey)}” below so
                       rows can be matched.
                     </p>
@@ -285,19 +285,19 @@ export function CsvImportModal({
                 </div>
 
                 <div>
-                  <p className="mb-2 text-xs font-bold uppercase tracking-wider text-[#737B86]">
+                  <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted">
                     Column mapping
                   </p>
                   <div className="grid gap-2 sm:grid-cols-2">
                     {fields.map((f) => (
                       <label
                         key={f.key}
-                        className="flex items-center justify-between gap-2 rounded-lg border border-[#E6E9ED] px-3 py-2"
+                        className="flex items-center justify-between gap-2 rounded-lg border border-line px-3 py-2"
                       >
-                        <span className="text-sm font-semibold text-[#3A4049]">
+                        <span className="text-sm font-semibold text-ink-2">
                           {f.label}
                           {f.key === matchKey && (
-                            <span className="ml-1 rounded bg-[#FDECEC] px-1.5 py-0.5 text-[10px] font-bold text-[#C8102E]">
+                            <span className="ml-1 rounded bg-primary-tint px-1.5 py-0.5 text-[10px] font-bold text-primary">
                               MATCH
                             </span>
                           )}
@@ -310,7 +310,7 @@ export function CsvImportModal({
                               [f.key]: Number(e.target.value),
                             }))
                           }
-                          className="max-w-[55%] rounded border border-[#E6E9ED] px-2 py-1 text-sm"
+                          className="max-w-[55%] rounded border border-line bg-surface px-2 py-1 text-sm text-ink"
                         >
                           <option value={-1}>— skip —</option>
                           {parsed.headers.map((h, i) => (
@@ -335,26 +335,26 @@ export function CsvImportModal({
                 </div>
 
                 {updates.length === 0 ? (
-                  <p className="rounded-lg bg-[#F9FAFB] px-4 py-6 text-center text-sm text-[#737B86]">
+                  <p className="rounded-lg bg-surface-2 px-4 py-6 text-center text-sm text-muted">
                     Nothing to update — no matched rows had changed values.
                   </p>
                 ) : (
-                  <div className="overflow-hidden rounded-lg border border-[#E6E9ED]">
+                  <div className="overflow-hidden rounded-lg border border-line">
                     <table className="w-full text-left text-sm">
                       <thead>
-                        <tr className="border-b border-[#E6E9ED] bg-[#F9FAFB] text-[10px] font-extrabold uppercase tracking-wider text-[#737B86]">
+                        <tr className="border-b border-line bg-surface-2 text-[10px] font-extrabold uppercase tracking-wider text-muted">
                           <th className="px-3 py-2">Asset</th>
                           <th className="px-3 py-2">Changes</th>
                         </tr>
                       </thead>
                       <tbody>
                         {updates.map((u, i) => (
-                          <tr key={i} className="border-b border-[#E6E9ED] last:border-0 align-top">
+                          <tr key={i} className="border-b border-line last:border-0 align-top">
                             <td className="px-3 py-2">
-                              <span className="font-mono text-xs font-semibold text-[#16181D]">
+                              <span className="font-mono text-xs font-semibold text-ink">
                                 {String(u.matched?.assetTag || u.matchValue)}
                               </span>
-                              <div className="text-xs text-[#737B86]">
+                              <div className="text-xs text-muted">
                                 {String(u.matched?.model || "")}
                               </div>
                             </td>
@@ -362,14 +362,14 @@ export function CsvImportModal({
                               <ul className="space-y-0.5">
                                 {u.changes.map((c) => (
                                   <li key={c.key} className="text-xs">
-                                    <span className="font-semibold text-[#3A4049]">
+                                    <span className="font-semibold text-ink-2">
                                       {c.label}:
                                     </span>{" "}
-                                    <span className="text-[#B5675F] line-through">
+                                    <span className="text-muted line-through">
                                       {c.oldDisplay}
                                     </span>{" "}
-                                    <span className="text-[#737B86]">→</span>{" "}
-                                    <span className="font-semibold text-[#1FA37A]">
+                                    <span className="text-muted">→</span>{" "}
+                                    <span className="font-semibold text-success">
                                       {c.newDisplay}
                                     </span>
                                   </li>
@@ -383,7 +383,7 @@ export function CsvImportModal({
                   </div>
                 )}
                 {unmatched.length > 0 && (
-                  <p className="text-xs text-[#737B86]">
+                  <p className="text-xs text-muted">
                     {unmatched.length} row{unmatched.length === 1 ? "" : "s"} had no
                     matching {fieldLabel(fields, matchKey)} and will be skipped (no
                     new rows are inserted).
@@ -393,8 +393,8 @@ export function CsvImportModal({
             )}
           </div>
 
-          <div className="flex items-center justify-between gap-3 border-t border-[#E6E9ED] p-5">
-            <div className="text-xs text-[#737B86]">
+          <div className="flex items-center justify-between gap-3 border-t border-line p-5">
+            <div className="text-xs text-muted">
               {step === "preview" &&
                 `${updates.length} update${updates.length === 1 ? "" : "s"} ready`}
             </div>
@@ -457,18 +457,18 @@ function SummaryStat({
     <div
       className={`rounded-lg border px-3 py-3 text-center ${
         tone === "update"
-          ? "border-[#BFE7D6] bg-[#EAF7F1]"
-          : "border-[#E6E9ED] bg-[#F9FAFB]"
+          ? "border-line bg-success-tint"
+          : "border-line bg-surface-2"
       }`}
     >
       <div
         className={`font-mono text-2xl font-semibold tabular-nums ${
-          tone === "update" ? "text-[#1FA37A]" : "text-[#16181D]"
+          tone === "update" ? "text-success" : "text-ink"
         }`}
       >
         {value}
       </div>
-      <div className="text-[10px] font-extrabold uppercase tracking-wider text-[#737B86]">
+      <div className="text-[10px] font-extrabold uppercase tracking-wider text-muted">
         {label}
       </div>
     </div>

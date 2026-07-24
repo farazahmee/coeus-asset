@@ -67,19 +67,19 @@ export function DashboardCustom({
   return (
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Total Records" value={total} accent={accent} icon="#" />
+        <KpiCard label="Total Records" value={total} tone="primary" icon="#" />
         {numberField && (
           <>
             <KpiCard
               label={`Sum (${numberField.label})`}
               value={sum.toLocaleString()}
-              accent={accent}
+              tone="success"
               icon="Σ"
             />
             <KpiCard
               label={`Average (${numberField.label})`}
               value={avg.toFixed(1)}
-              accent={accent}
+              tone="info"
               icon="μ"
             />
           </>
@@ -88,7 +88,7 @@ export function DashboardCustom({
           <KpiCard
             label={`Distinct ${groupField.label}`}
             value={distinctGroup}
-            accent={accent}
+            tone="warning"
             icon="◆"
           />
         )}

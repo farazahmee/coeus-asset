@@ -43,6 +43,8 @@ export function Workspace() {
   const [newSheetOpen, setNewSheetOpen] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [registerFilter, setRegisterFilter] = useState<null | "missingCost">(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarMobileOpen, setSidebarMobileOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showToast = useCallback((msg: string) => {
@@ -203,7 +205,7 @@ export function Workspace() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#F3F4F6] text-[#737B86]">
+      <div className="flex min-h-screen items-center justify-center bg-app text-muted">
         Loading workspace…
       </div>
     );
@@ -211,9 +213,9 @@ export function Workspace() {
 
   if (error && !sheets.length) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#F3F4F6] p-6 text-center">
-        <p className="font-semibold text-[#C8102E]">{error}</p>
-        <p className="max-w-md text-sm text-[#737B86]">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-app p-6 text-center">
+        <p className="font-semibold text-brand">{error}</p>
+        <p className="max-w-md text-sm text-muted">
           Set <code className="font-mono">DATABASE_URL</code> in{" "}
           <code className="font-mono">.env.local</code> to your Neon connection string, then restart{" "}
           <code className="font-mono">npm run dev</code>.
@@ -223,9 +225,10 @@ export function Workspace() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[#F3F4F6]">
+    <div className="flex min-h-screen flex-col bg-app">
       <Header
         saving={saving}
+        onMenuClick={() => setSidebarMobileOpen(true)}
         onExport={() => {
           if (!activeSheet) return;
           exportCsv(
@@ -235,13 +238,17 @@ export function Workspace() {
           );
         }}
       />
-      <div className="flex flex-1 flex-col md:flex-row">
+      <div className="flex flex-1">
         <Sidebar
           sheets={sheets}
           activeId={activeId}
           onSelect={selectSheet}
           onDelete={handleDeleteSheet}
           onNew={() => setNewSheetOpen(true)}
+          collapsed={sidebarCollapsed}
+          onToggleCollapse={() => setSidebarCollapsed((v) => !v)}
+          mobileOpen={sidebarMobileOpen}
+          onCloseMobile={() => setSidebarMobileOpen(false)}
         />
         <main className="min-w-0 flex-1 p-4 md:p-6">
           {activeSheet && (
@@ -250,15 +257,15 @@ export function Workspace() {
                 <div className="flex items-center gap-3">
                   <span
                     className="flex h-11 w-11 items-center justify-center rounded-xl text-white"
-                    style={{ backgroundColor: activeSheet.color || "#737B86" }}
+                    style={{ backgroundColor: activeSheet.color || "var(--muted)" }}
                   >
                     <SheetIcon name={activeSheet.icon ?? undefined} size={22} />
                   </span>
                   <div>
-                    <h2 className="text-xl font-extrabold text-[#16181D]">
+                    <h2 className="font-display text-xl font-extrabold text-ink">
                       {activeSheet.name}
                     </h2>
-                    <p className="text-sm text-[#737B86]">
+                    <p className="text-sm text-muted">
                       {sheetSubtitle(activeSheet)}
                     </p>
                   </div>
@@ -312,7 +319,7 @@ export function Workspace() {
                   <button
                     type="button"
                     onClick={handleClear}
-                    className="text-sm font-semibold text-[#737B86] hover:text-[#C8102E]"
+                    className="text-sm font-semibold text-muted transition hover:text-brand"
                   >
                     Clear sheet
                   </button>
@@ -326,7 +333,7 @@ export function Workspace() {
                     onShowMissingCost={showMissingCost}
                   />
                   <div>
-                    <h3 className="mb-3 text-sm font-extrabold uppercase tracking-wider text-[#737B86]">
+                    <h3 className="mb-3 text-sm font-extrabold uppercase tracking-wider text-muted">
                       All {activeSheet.name} — full details
                     </h3>
                     <RegisterTable
@@ -357,7 +364,7 @@ export function Workspace() {
                   filterNotice={
                     registerFilter === "missingCost" ? (
                       <div className="flex flex-wrap items-center justify-between gap-2">
-                        <span className="text-sm font-semibold text-[#8A1420]">
+                        <span className="text-sm font-semibold text-ink">
                           Showing {registerRecords.length}{" "}
                           {registerRecords.length === 1 ? "asset" : "assets"} with
                           no cost recorded
@@ -365,7 +372,7 @@ export function Workspace() {
                         <button
                           type="button"
                           onClick={() => setRegisterFilter(null)}
-                          className="text-xs font-bold text-[#C8102E] hover:underline"
+                          className="text-xs font-bold text-primary hover:underline"
                         >
                           Show all
                         </button>
@@ -411,8 +418,12 @@ export function Workspace() {
         onApply={handleImportApply}
       />
       {toast && (
-        <div className="fixed bottom-5 right-5 z-[100] flex animate-slide-in items-center gap-2 rounded-xl bg-[#16181D] px-4 py-3 text-sm font-semibold text-white shadow-lg">
-          <span className="inline-block h-2 w-2 rounded-full bg-[#3ECF8E]" />
+        <div
+          className="fixed bottom-5 right-5 z-[100] flex animate-slide-in items-center gap-2 rounded-[var(--radius-md)] bg-[var(--sidebar-bg)] px-4 py-3 text-sm font-semibold text-white shadow-lg"
+          role="status"
+          aria-live="polite"
+        >
+          <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
           {toast}
         </div>
       )}
