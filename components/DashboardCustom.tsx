@@ -5,6 +5,7 @@ import { effectiveSheetType, getFieldsForSheet } from "@/lib/fields";
 import { parseNumber } from "@/lib/format";
 import { DashboardEmployees } from "./DashboardEmployees";
 import { DashboardHardware } from "./DashboardHardware";
+import { DashboardSubscriptions } from "./DashboardSubscriptions";
 import { BarPanel } from "./BarPanel";
 import { KpiCard } from "./KpiCard";
 import { RecentList } from "./RecentList";
@@ -24,6 +25,8 @@ export function DashboardCustom({
       <DashboardHardware records={records} onShowMissingCost={onShowMissingCost} />
     );
   if (t === "employees") return <DashboardEmployees records={records} />;
+  if (t === "subscriptions")
+    return <DashboardSubscriptions records={records} />;
 
   const fields = getFieldsForSheet(sheet);
   const numberField = fields.find((f) => f.type === "number");

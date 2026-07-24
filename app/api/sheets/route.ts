@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { ensureSchema, getSql, newId, rows } from "@/lib/db";
+import { READONLY_SHEET_IDS } from "@/lib/fields";
 import type { CustomField } from "@/lib/types";
 
 export async function GET() {
@@ -72,7 +73,7 @@ export async function DELETE(req: NextRequest) {
     if (!id) {
       return Response.json({ error: "id required" }, { status: 400 });
     }
-    if (id === "hardware" || id === "employees") {
+    if (READONLY_SHEET_IDS.has(id)) {
       return Response.json(
         { error: "Built-in sheets cannot be deleted" },
         { status: 403 }

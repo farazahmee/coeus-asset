@@ -33,6 +33,16 @@ export function RegisterTable({
   const [q, setQ] = useState("");
   const [editing, setEditing] = useState<{ id: string; key: string } | null>(null);
   const [draft, setDraft] = useState("");
+  // Record ids whose password cell is currently revealed.
+  const [revealed, setRevealed] = useState<Set<string>>(new Set());
+
+  const toggleReveal = (id: string) =>
+    setRevealed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -65,6 +75,9 @@ export function RegisterTable({
     "machineId",
     "cost",
     "email",
+    "usernameEmail",
+    "url",
+    "password",
   ]);
 
   // Build a drawer-shaped payload (non-empty field values + id) with one field
@@ -142,6 +155,46 @@ export function RegisterTable({
     if (v == null || v === "") return "—";
     if (f.type === "date") return formatDate(String(v));
     if (f.key === "cost" && f.type === "number") return formatPKR(parseNumber(v));
+    if (f.type === "password") {
+      const shown = revealed.has(r.id);
+      return (
+        <span className="inline-flex items-center gap-1.5">
+          <span>{shown ? String(v) : "••••••••"}</span>
+          <button
+            type="button"
+            onClick={() => toggleReveal(r.id)}
+            className="rounded p-0.5 text-[#737B86] hover:text-[#16181D]"
+            aria-label={shown ? "Hide password" : "Show password"}
+          >
+            {shown ? (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                <path d="M1 1l22 22" />
+              </svg>
+            ) : (
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            )}
+          </button>
+        </span>
+      );
+    }
+    if (f.key === "url") {
+      const raw = String(v);
+      const href = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+      return (
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[#2D6CDF] hover:underline"
+        >
+          {raw}
+        </a>
+      );
+    }
     if (f.type === "select" && f.palette) {
       return <Pill label={String(v)} color={f.palette[String(v)] || "#737B86"} />;
     }

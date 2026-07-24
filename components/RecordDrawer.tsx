@@ -114,13 +114,25 @@ export function RecordDrawer({
                 </select>
               ) : (
                 <input
-                  type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
+                  type={
+                    f.type === "number"
+                      ? "number"
+                      : f.type === "date"
+                        ? "date"
+                        : f.type === "password"
+                          ? "password"
+                          : "text"
+                  }
+                  autoComplete={f.type === "password" ? "new-password" : undefined}
                   value={form[f.key] || ""}
                   onChange={(e) =>
                     setForm((prev) => ({ ...prev, [f.key]: e.target.value }))
                   }
                   className={`w-full rounded-lg border border-[#E6E9ED] px-3 py-2 text-sm ${
-                    f.key === "assetTag" || f.key === "serialNumber" || f.key === "machineId"
+                    f.key === "assetTag" ||
+                    f.key === "serialNumber" ||
+                    f.key === "machineId" ||
+                    f.type === "password"
                       ? "font-mono"
                       : ""
                   }`}

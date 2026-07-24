@@ -87,7 +87,10 @@ export function BarPanel({
     );
   }
 
-  const max = Math.max(...items.map((i) => i.count), 1);
+  // Width scales by value when a valueFormatter is supplied (e.g. spend charts),
+  // otherwise by count (e.g. counts by category). No formatter -> count, so
+  // existing count-based charts are unchanged.
+  const max = Math.max(...items.map(metricOf), 1);
   return (
     <div className="animate-rise rounded-[14px] border border-[#E6E9ED] bg-white p-5 shadow-[0_1px_3px_rgba(22,24,29,0.06)]">
       <h3 className="mb-4 text-sm font-bold text-[#16181D]">{title}</h3>
@@ -107,7 +110,7 @@ export function BarPanel({
               <div
                 className="h-full rounded-full transition-all duration-700 ease-out"
                 style={{
-                  width: mounted ? `${(item.count / max) * 100}%` : "0%",
+                  width: mounted ? `${(metricOf(item) / max) * 100}%` : "0%",
                   backgroundColor: item.color,
                 }}
               />

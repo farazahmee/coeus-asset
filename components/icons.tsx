@@ -62,6 +62,18 @@ export function IconGrid(p: IconProps) {
   );
 }
 
+export function IconSubscription(p: IconProps) {
+  // Card + recurring-cycle arrow — reads as "recurring billing".
+  return (
+    <svg {...base(p)}>
+      <rect x="2" y="5" width="20" height="14" rx="2" />
+      <path d="M2 10h20" />
+      <path d="M15 15.5a2.5 2.5 0 1 1-.7-1.7" />
+      <path d="M15 13v2h-2" />
+    </svg>
+  );
+}
+
 const MAP: Record<string, (p: IconProps) => ReactNode> = {
   laptop: IconLaptop,
   users: IconUsers,
@@ -69,6 +81,7 @@ const MAP: Record<string, (p: IconProps) => ReactNode> = {
   box: IconBox,
   monitor: IconMonitor,
   grid: IconGrid,
+  subscription: IconSubscription,
 };
 
 export function SheetIcon({
