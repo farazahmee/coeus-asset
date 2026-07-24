@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-import { requireWriteAuth } from "@/lib/api-auth";
 import { ensureSchema, getSql, newId, rows } from "@/lib/db";
 import type { CustomField } from "@/lib/types";
 
@@ -23,8 +22,6 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = requireWriteAuth(req);
-  if (auth) return auth;
   try {
     await ensureSchema();
     const body = await req.json();
@@ -69,8 +66,6 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const auth = requireWriteAuth(req);
-  if (auth) return auth;
   try {
     await ensureSchema();
     const id = req.nextUrl.searchParams.get("id");

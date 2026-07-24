@@ -1,9 +1,8 @@
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
-
+// All requests are gated by HTTP Basic Auth in proxy.ts; the browser attaches
+// the Authorization header automatically once the user has authenticated, so
+// no application-level key is needed here.
 function headers(): HeadersInit {
-  const h: HeadersInit = { "Content-Type": "application/json" };
-  if (API_KEY) h["x-app-key"] = API_KEY;
-  return h;
+  return { "Content-Type": "application/json" };
 }
 
 export async function fetchSheets() {
