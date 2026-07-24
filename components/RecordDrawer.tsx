@@ -2,7 +2,16 @@
 
 import type { FieldDef } from "@/lib/fields";
 import type { RecordRow } from "@/lib/types";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+
+function buildInit(fields: FieldDef[], record: RecordRow | null) {
+  const init: Record<string, string> = {};
+  for (const f of fields) {
+    const v = record?.[f.key];
+    init[f.key] = v != null ? String(v) : "";
+  }
+  return init;
+}
 
 export function RecordDrawer({
   open,
@@ -19,19 +28,21 @@ export function RecordDrawer({
   onClose: () => void;
   onSave: (data: Record<string, string | number>) => void;
 }) {
-  const [form, setForm] = useState<Record<string, string>>({});
+  // Reset the form whenever the drawer opens or switches to a different record.
+  // Done via the "adjust state during render" pattern (tracking the previous
+  // signature) rather than a setState-in-effect.
+  const sig = open ? String(record?.id ?? "new") : "closed";
+  const [loadedSig, setLoadedSig] = useState(sig);
+  const [form, setForm] = useState<Record<string, string>>(() =>
+    buildInit(fields, record)
+  );
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!open) return;
-    const init: Record<string, string> = {};
-    for (const f of fields) {
-      const v = record?.[f.key];
-      init[f.key] = v != null ? String(v) : "";
-    }
-    setForm(init);
+  if (sig !== loadedSig) {
+    setLoadedSig(sig);
+    setForm(buildInit(fields, record));
     setError("");
-  }, [open, record, fields]);
+  }
 
   if (!open) return null;
 

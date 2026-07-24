@@ -10,44 +10,84 @@ export interface BarItem {
   sub?: string;
 }
 
+function EmptyPanel({ title, emptyLabel }: { title: string; emptyLabel: string }) {
+  return (
+    <div className="animate-rise rounded-[14px] border border-[#E6E9ED] bg-white p-5 shadow-[0_1px_3px_rgba(22,24,29,0.06)]">
+      <h3 className="mb-4 text-sm font-bold text-[#16181D]">{title}</h3>
+      <div className="flex h-40 flex-col items-center justify-center gap-2 text-center">
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#F3F4F6] text-[#B5BBC4]">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M3 3v18h18" />
+            <path d="M18 17V9M13 17V5M8 17v-3" />
+          </svg>
+        </span>
+        <p className="text-sm font-medium text-[#737B86]">{emptyLabel}</p>
+      </div>
+    </div>
+  );
+}
+
 export function BarPanel({
   title,
   items,
   horizontal = true,
   valueFormatter,
+  emptyLabel = "No data yet",
 }: {
   title: string;
   items: BarItem[];
   horizontal?: boolean;
   valueFormatter?: (n: number) => string;
+  emptyLabel?: string;
 }) {
-  const max = Math.max(...items.map((i) => i.count), 1);
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
+  if (items.length === 0) {
+    return <EmptyPanel title={title} emptyLabel={emptyLabel} />;
+  }
+
+  // Vertical bars can be scaled by a monetary `value` (e.g. spend) rather than
+  // a raw `count`. When a valueFormatter is supplied and items carry a value,
+  // we scale heights by value and print the formatted amount under each bar.
+  const useValue =
+    valueFormatter != null && items.some((i) => i.value != null);
+  const metricOf = (i: BarItem) => (useValue ? i.value ?? 0 : i.count);
+
   if (!horizontal) {
+    const max = Math.max(...items.map(metricOf), 1);
     return (
       <div className="animate-rise rounded-[14px] border border-[#E6E9ED] bg-white p-5 shadow-[0_1px_3px_rgba(22,24,29,0.06)]">
         <h3 className="mb-4 text-sm font-bold text-[#16181D]">{title}</h3>
         <div className="flex h-48 items-end gap-2">
-          {items.map((item) => (
-            <div key={item.label} className="flex flex-1 flex-col items-center gap-1">
-              <div
-                className="w-full max-w-[48px] rounded-t-md transition-all duration-700 ease-out"
-                style={{
-                  height: mounted ? `${(item.count / max) * 100}%` : "0%",
-                  minHeight: item.count ? 8 : 0,
-                  backgroundColor: item.color,
-                }}
-              />
-              <span className="font-mono text-[10px] text-[#737B86]">{item.label}</span>
-            </div>
-          ))}
+          {items.map((item) => {
+            const m = metricOf(item);
+            return (
+              <div key={item.label} className="flex flex-1 flex-col items-center gap-1">
+                {useValue && (
+                  <span className="font-mono text-[10px] font-semibold tabular-nums text-[#3A4049]">
+                    {valueFormatter!(item.value ?? 0)}
+                  </span>
+                )}
+                <div
+                  className="w-full max-w-[48px] rounded-t-md transition-all duration-700 ease-out"
+                  title={useValue ? valueFormatter!(item.value ?? 0) : String(item.count)}
+                  style={{
+                    height: mounted ? `${(m / max) * 100}%` : "0%",
+                    minHeight: m ? 8 : 0,
+                    backgroundColor: item.color,
+                  }}
+                />
+                <span className="font-mono text-[10px] text-[#737B86]">{item.label}</span>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
   }
 
+  const max = Math.max(...items.map((i) => i.count), 1);
   return (
     <div className="animate-rise rounded-[14px] border border-[#E6E9ED] bg-white p-5 shadow-[0_1px_3px_rgba(22,24,29,0.06)]">
       <h3 className="mb-4 text-sm font-bold text-[#16181D]">{title}</h3>
@@ -56,7 +96,7 @@ export function BarPanel({
           <div key={item.label}>
             <div className="mb-1 flex justify-between text-xs">
               <span className="font-semibold text-[#3A4049]">{item.label}</span>
-              <span className="font-mono text-[#737B86]">
+              <span className="font-mono tabular-nums text-[#737B86]">
                 {item.sub ??
                   (valueFormatter && item.value != null
                     ? `${item.count} · ${valueFormatter(item.value)}`
@@ -74,9 +114,6 @@ export function BarPanel({
             </div>
           </div>
         ))}
-        {items.length === 0 && (
-          <p className="text-sm text-[#737B86]">No data yet</p>
-        )}
       </div>
     </div>
   );

@@ -12,12 +12,17 @@ import { RecentList } from "./RecentList";
 export function DashboardCustom({
   sheet,
   records,
+  onShowMissingCost,
 }: {
   sheet: Sheet;
   records: RecordRow[];
+  onShowMissingCost?: () => void;
 }) {
   const t = effectiveSheetType(sheet);
-  if (t === "hardware") return <DashboardHardware records={records} />;
+  if (t === "hardware")
+    return (
+      <DashboardHardware records={records} onShowMissingCost={onShowMissingCost} />
+    );
   if (t === "employees") return <DashboardEmployees records={records} />;
 
   const fields = getFieldsForSheet(sheet);

@@ -12,18 +12,23 @@ import {
 import { exportCsv } from "@/lib/csv";
 import {
   addButtonLabel,
+  effectiveSheetType,
   getFieldsForSheet,
   sheetSubtitle,
 } from "@/lib/fields";
 import type { RecordRow, Sheet, ViewMode } from "@/lib/types";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { CsvImportModal } from "./CsvImportModal";
 import { DashboardCustom } from "./DashboardCustom";
+import { hasNoCost } from "./DashboardHardware";
 import { Header } from "./Header";
 import { NewSheetModal } from "./NewSheetModal";
 import { RecordDrawer } from "./RecordDrawer";
 import { RegisterTable } from "./RegisterTable";
 import { SheetIcon } from "./icons";
 import { Sidebar } from "./Sidebar";
+
+const INLINE_EDITABLE = ["cost", "category", "purchaseDate"];
 
 export function Workspace() {
   const [sheets, setSheets] = useState<Sheet[]>([]);
@@ -36,6 +41,8 @@ export function Workspace() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editRecord, setEditRecord] = useState<RecordRow | null>(null);
   const [newSheetOpen, setNewSheetOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [registerFilter, setRegisterFilter] = useState<null | "missingCost">(null);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const showToast = useCallback((msg: string) => {
@@ -46,6 +53,14 @@ export function Workspace() {
 
   const activeSheet = sheets.find((s) => s.id === activeId) ?? sheets[0];
   const fields = activeSheet ? getFieldsForSheet(activeSheet) : [];
+  const isHardware = activeSheet
+    ? effectiveSheetType(activeSheet) === "hardware"
+    : false;
+  const editableKeys = new Set(
+    INLINE_EDITABLE.filter((k) => fields.some((f) => f.key === k))
+  );
+  const registerRecords =
+    registerFilter === "missingCost" ? records.filter(hasNoCost) : records;
 
   const flashSaving = useCallback(() => {
     setSaving(true);
@@ -86,9 +101,42 @@ export function Workspace() {
     );
   }, [activeId, loadRecords]);
 
-  const refresh = async () => {
+  const selectSheet = useCallback((id: string) => {
+    setActiveId(id);
+    setRegisterFilter(null);
+  }, []);
+
+  const refresh = useCallback(async () => {
     await loadSheets();
     if (activeId) await loadRecords(activeId);
+  }, [loadSheets, loadRecords, activeId]);
+
+  const handleInlineSave = async (data: Record<string, string | number>) => {
+    if (!activeSheet) return;
+    flashSaving();
+    const saved = await saveRecord(activeSheet.id, data);
+    setRecords((prev) => prev.map((r) => (r.id === saved.id ? saved : r)));
+    await loadSheets();
+    showToast("Saved");
+  };
+
+  const handleImportApply = async (
+    updates: Record<string, string | number>[]
+  ) => {
+    if (!activeSheet) return;
+    flashSaving();
+    // Each update is an upsert keyed by the matched record id, so existing
+    // rows are updated in place — no duplicates are inserted.
+    await Promise.all(updates.map((u) => saveRecord(activeSheet.id, u)));
+    await refresh();
+    showToast(
+      `Updated ${updates.length} ${updates.length === 1 ? "asset" : "assets"}`
+    );
+  };
+
+  const showMissingCost = () => {
+    setView("register");
+    setRegisterFilter("missingCost");
   };
 
   const handleSave = async (data: Record<string, string | number>) => {
@@ -191,7 +239,7 @@ export function Workspace() {
         <Sidebar
           sheets={sheets}
           activeId={activeId}
-          onSelect={setActiveId}
+          onSelect={selectSheet}
           onDelete={handleDeleteSheet}
           onNew={() => setNewSheetOpen(true)}
         />
@@ -215,30 +263,47 @@ export function Workspace() {
                     </p>
                   </div>
                 </div>
-                <button
-                  type="button"
-                  className="btn-primary"
-                  onClick={() => {
-                    setEditRecord(null);
-                    setDrawerOpen(true);
-                  }}
-                >
-                  {addButtonLabel(activeSheet)}
-                </button>
+                <div className="flex items-center gap-2">
+                  {isHardware && (
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={() => setImportOpen(true)}
+                    >
+                      Import CSV
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    className="btn-primary"
+                    onClick={() => {
+                      setEditRecord(null);
+                      setDrawerOpen(true);
+                    }}
+                  >
+                    {addButtonLabel(activeSheet)}
+                  </button>
+                </div>
               </div>
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div className="segmented">
                   <button
                     type="button"
                     className={view === "dashboard" ? "active" : ""}
-                    onClick={() => setView("dashboard")}
+                    onClick={() => {
+                      setView("dashboard");
+                      setRegisterFilter(null);
+                    }}
                   >
                     Dashboard
                   </button>
                   <button
                     type="button"
                     className={view === "register" ? "active" : ""}
-                    onClick={() => setView("register")}
+                    onClick={() => {
+                      setView("register");
+                      setRegisterFilter(null);
+                    }}
                   >
                     Register
                   </button>
@@ -255,7 +320,11 @@ export function Workspace() {
               </div>
               {view === "dashboard" ? (
                 <div className="space-y-6">
-                  <DashboardCustom sheet={activeSheet} records={records} />
+                  <DashboardCustom
+                    sheet={activeSheet}
+                    records={records}
+                    onShowMissingCost={showMissingCost}
+                  />
                   <div>
                     <h3 className="mb-3 text-sm font-extrabold uppercase tracking-wider text-[#737B86]">
                       All {activeSheet.name} — full details
@@ -264,6 +333,8 @@ export function Workspace() {
                       fields={fields}
                       records={records}
                       addLabel={addButtonLabel(activeSheet)}
+                      editableKeys={editableKeys}
+                      onInlineSave={handleInlineSave}
                       onAdd={() => {
                         setEditRecord(null);
                         setDrawerOpen(true);
@@ -279,8 +350,28 @@ export function Workspace() {
               ) : (
                 <RegisterTable
                   fields={fields}
-                  records={records}
+                  records={registerRecords}
                   addLabel={addButtonLabel(activeSheet)}
+                  editableKeys={editableKeys}
+                  onInlineSave={handleInlineSave}
+                  filterNotice={
+                    registerFilter === "missingCost" ? (
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="text-sm font-semibold text-[#8A1420]">
+                          Showing {registerRecords.length}{" "}
+                          {registerRecords.length === 1 ? "asset" : "assets"} with
+                          no cost recorded
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setRegisterFilter(null)}
+                          className="text-xs font-bold text-[#C8102E] hover:underline"
+                        >
+                          Show all
+                        </button>
+                      </div>
+                    ) : undefined
+                  }
                   onAdd={() => {
                     setEditRecord(null);
                     setDrawerOpen(true);
@@ -311,6 +402,13 @@ export function Workspace() {
         open={newSheetOpen}
         onClose={() => setNewSheetOpen(false)}
         onCreate={handleCreateSheet}
+      />
+      <CsvImportModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        fields={fields}
+        records={records}
+        onApply={handleImportApply}
       />
       {toast && (
         <div className="fixed bottom-5 right-5 z-[100] flex animate-slide-in items-center gap-2 rounded-xl bg-[#16181D] px-4 py-3 text-sm font-semibold text-white shadow-lg">

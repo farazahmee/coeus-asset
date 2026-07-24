@@ -4,7 +4,7 @@ import type { FieldDef } from "@/lib/fields";
 import { formatDate, formatPKR, parseNumber } from "@/lib/format";
 import type { RecordRow } from "@/lib/types";
 import { Pill } from "./Pill";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
 export function RegisterTable({
   fields,
@@ -13,6 +13,9 @@ export function RegisterTable({
   onDelete,
   onAdd,
   addLabel,
+  editableKeys,
+  onInlineSave,
+  filterNotice,
 }: {
   fields: FieldDef[];
   records: RecordRow[];
@@ -20,8 +23,17 @@ export function RegisterTable({
   onDelete: (id: string) => void;
   onAdd: () => void;
   addLabel: string;
+  /** Keys that can be edited directly in the table (e.g. cost, category). */
+  editableKeys?: Set<string>;
+  /** Commit an inline edit; receives a drawer-shaped payload (fields + id). */
+  onInlineSave?: (data: Record<string, string | number>) => void | Promise<void>;
+  /** Optional banner shown above the table (e.g. active "missing cost" filter). */
+  filterNotice?: ReactNode;
 }) {
   const [q, setQ] = useState("");
+  const [editing, setEditing] = useState<{ id: string; key: string } | null>(null);
+  const [draft, setDraft] = useState("");
+
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return records;
@@ -30,7 +42,7 @@ export function RegisterTable({
     );
   }, [records, fields, q]);
 
-  if (records.length === 0) {
+  if (records.length === 0 && !filterNotice) {
     return (
       <div className="flex flex-col items-center justify-center rounded-[14px] border border-[#E6E9ED] bg-white py-16 shadow-[0_1px_3px_rgba(22,24,29,0.06)]">
         <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-[#F3F4F6] text-[#737B86]">
@@ -55,24 +67,114 @@ export function RegisterTable({
     "email",
   ]);
 
-  function cellValue(f: FieldDef, r: RecordRow) {
+  // Build a drawer-shaped payload (non-empty field values + id) with one field
+  // changed, mirroring RecordDrawer.submit so we never persist stray keys.
+  function commit(r: RecordRow, f: FieldDef) {
+    const current = r[f.key] == null ? "" : String(r[f.key]);
+    if (draft === current) {
+      setEditing(null);
+      return;
+    }
+    const payload: Record<string, string | number> = { id: r.id };
+    for (const fd of fields) {
+      if (fd.key === f.key) continue;
+      const v = r[fd.key];
+      if (v == null || v === "") continue;
+      payload[fd.key] = fd.type === "number" ? parseNumber(v) : String(v);
+    }
+    const trimmed = draft.trim();
+    if (trimmed !== "") {
+      payload[f.key] = f.type === "number" ? parseNumber(trimmed) : trimmed;
+    }
+    setEditing(null);
+    void onInlineSave?.(payload);
+  }
+
+  function startEdit(r: RecordRow, f: FieldDef) {
+    setEditing({ id: r.id, key: f.key });
+    const v = r[f.key];
+    setDraft(v == null ? "" : String(v));
+  }
+
+  function renderEditor(r: RecordRow, f: FieldDef) {
+    const common =
+      "w-full rounded border border-[#C8102E] px-2 py-1 text-sm outline-none";
+    if (f.type === "select") {
+      return (
+        <select
+          autoFocus
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={() => commit(r, f)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") commit(r, f);
+            if (e.key === "Escape") setEditing(null);
+          }}
+          className={common}
+        >
+          <option value="">—</option>
+          {(f.options || []).map((o) => (
+            <option key={o} value={o}>
+              {o}
+            </option>
+          ))}
+        </select>
+      );
+    }
+    return (
+      <input
+        autoFocus
+        type={f.type === "number" ? "number" : f.type === "date" ? "date" : "text"}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => commit(r, f)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commit(r, f);
+          if (e.key === "Escape") setEditing(null);
+        }}
+        className={`${common} ${f.type === "number" ? "font-mono tabular-nums" : ""}`}
+      />
+    );
+  }
+
+  function display(f: FieldDef, r: RecordRow): ReactNode {
     const v = r[f.key];
     if (v == null || v === "") return "—";
     if (f.type === "date") return formatDate(String(v));
     if (f.key === "cost" && f.type === "number") return formatPKR(parseNumber(v));
     if (f.type === "select" && f.palette) {
-      return (
-        <Pill
-          label={String(v)}
-          color={f.palette[String(v)] || "#737B86"}
-        />
-      );
+      return <Pill label={String(v)} color={f.palette[String(v)] || "#737B86"} />;
     }
     return String(v);
   }
 
+  function cell(f: FieldDef, r: RecordRow): ReactNode {
+    const isEditable = !!editableKeys?.has(f.key) && !!onInlineSave;
+    const isEditing = editing?.id === r.id && editing.key === f.key;
+    if (isEditing) return renderEditor(r, f);
+    if (isEditable) {
+      const empty = r[f.key] == null || r[f.key] === "";
+      return (
+        <button
+          type="button"
+          onClick={() => startEdit(r, f)}
+          title="Click to edit"
+          className={`-mx-1 flex min-h-[24px] items-center gap-1 rounded px-1 text-left hover:bg-[#FDECEC] ${
+            empty ? "text-[#C8102E]" : ""
+          }`}
+        >
+          {empty ? "＋ Add" : display(f, r)}
+        </button>
+      );
+    }
+    return display(f, r);
+  }
+
   return (
     <div className="rounded-[14px] border border-[#E6E9ED] bg-white shadow-[0_1px_3px_rgba(22,24,29,0.06)]">
+      {filterNotice && (
+        <div className="border-b border-[#E6E9ED] px-4 py-3">{filterNotice}</div>
+      )}
       <div className="flex flex-wrap items-center gap-3 border-b border-[#E6E9ED] p-4">
         <input
           type="search"
@@ -107,7 +209,7 @@ export function RegisterTable({
                       monoKeys.has(f.key) ? "font-mono tabular-nums" : ""
                     }`}
                   >
-                    {cellValue(f, r)}
+                    {cell(f, r)}
                   </td>
                 ))}
                 <td className="px-4 py-3 text-right">
